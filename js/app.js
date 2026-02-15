@@ -17,6 +17,10 @@ window.__cpbData = { loadQuotes, applyFilters, addQuote, validateSheet };
 window.__onGapiLoaded = onGapiLoaded;
 window.__onGisLoaded = onGisLoaded;
 
+// Handle race condition: scripts may have loaded before this module ran
+if (window.gapi?.load) onGapiLoaded();
+if (window.google?.accounts?.oauth2) onGisLoaded();
+
 // PWA service worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});

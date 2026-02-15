@@ -1,0 +1,57 @@
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.settings__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.settings__section-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.settings__description {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.settings__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.settings__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.settings__status-dot--connected {
+  background-color: var(--color-success);
+}
+
+.settings__status-dot--disconnected {
+  background-color: var(--color-text-secondary);
+}
+
+.settings__sheet-input {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.settings__sheet-input .form-input {
+  flex: 1;
+}
+
+@media (max-width: 639px) {
+  .settings__sheet-input {
+    flex-direction: column;
+  }
+}

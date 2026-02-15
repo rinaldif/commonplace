@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#667eea">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Quotes">
+  <meta name="description" content="A personal collection of quotes and observations">
+  <title>My Commonplace Book</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="icon" href="assets/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/views/browse.css">
+  <link rel="stylesheet" href="css/views/add.css">
+  <link rel="stylesheet" href="css/views/settings.css">
+  <link rel="stylesheet" href="css/views/books.css">
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <h1 class="app-title">My Commonplace Book</h1>
+      <button id="auth-btn" class="btn btn--ghost" hidden>Sign in</button>
+    </header>
+    <nav id="tab-nav" class="tab-nav" hidden></nav>
+    <main id="view-container" class="view-container"></main>
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <!-- Google APIs -->
+  <script async defer src="https://apis.google.com/js/api.js"
+          onload="window.__onGapiLoaded && window.__onGapiLoaded()"></script>
+  <script async defer src="https://accounts.google.com/gsi/client"
+          onload="window.__onGisLoaded && window.__onGisLoaded()"></script>
+
+  <!-- App -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

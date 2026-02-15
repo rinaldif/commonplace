@@ -1,0 +1,101 @@
+:root {
+  /* Surface & background */
+  --color-bg: #fafaf9;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #f4f4f3;
+
+  /* Text */
+  --color-text: #18181b;
+  --color-text-secondary: #71717a;
+  --color-text-tertiary: #a1a1aa;
+  --color-text-inverse: #fafafa;
+
+  /* Accent — refined indigo, used sparingly */
+  --color-accent: #4f46e5;
+  --color-accent-soft: rgba(79, 70, 229, 0.08);
+  --color-accent-hover: #4338ca;
+
+  /* Card */
+  --color-card-bg: #0f0f14;
+  --color-card-text: rgba(255, 255, 255, 0.88);
+  --color-card-secondary: rgba(255, 255, 255, 0.45);
+  --color-card-muted: rgba(255, 255, 255, 0.2);
+  --color-card-border: rgba(255, 255, 255, 0.06);
+
+  /* Borders */
+  --color-border: #e4e4e7;
+  --color-border-light: #f4f4f5;
+
+  /* Feedback */
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Georgia', 'Times New Roman', serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+  --font-size-xs: 0.6875rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 0.9375rem;
+  --font-size-lg: 1.0625rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.625rem;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.6;
+  --line-height-relaxed: 1.75;
+
+  /* Borders */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 8px 40px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* Layout */
+  --max-width: 640px;
+  --nav-height: 56px;
+  --header-height: 48px;
+
+  /* Transitions */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s var(--ease-out);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #09090b;
+    --color-surface: #18181b;
+    --color-surface-raised: #27272a;
+    --color-surface-sunken: #0f0f12;
+    --color-text: #fafafa;
+    --color-text-secondary: #a1a1aa;
+    --color-text-tertiary: #71717a;
+    --color-border: #27272a;
+    --color-border-light: #1e1e22;
+    --color-card-bg: #000000;
+    --color-accent-soft: rgba(79, 70, 229, 0.15);
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 8px 40px rgba(0, 0, 0, 0.5);
+  }
+}

@@ -1,0 +1,61 @@
+/* Add quote form */
+.add-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.add-form__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .add-form__row--3col {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .add-form__row--2col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.add-form__actions {
+  display: flex;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+/* Combo select (dropdown + add new input) */
+.combo-select__new-input {
+  margin-top: var(--space-2);
+  animation: slide-down 0.2s ease;
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Type selector header */
+.add-type-selector {
+  margin-bottom: var(--space-4);
+}
+
+/* Success message */
+.add-success {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-success);
+  color: var(--color-text);
+}
+
+.add-success__icon {
+  font-size: 1.5rem;
+  color: var(--color-success);
+}

@@ -5,6 +5,8 @@ let tokenClient = null;
 let gapiInited = false;
 let gisInited = false;
 let refreshTimer = null;
+let gapiReadyResolve;
+export const gapiReady = new Promise(r => { gapiReadyResolve = r; });
 
 /** Called when gapi.js script loads. */
 export function onGapiLoaded() {
@@ -15,10 +17,12 @@ export function onGapiLoaded() {
         discoveryDocs: [DISCOVERY_DOC],
       });
       gapiInited = true;
+      gapiReadyResolve();
       maybeEnableAuth();
     } catch (err) {
       console.error('gapi init failed:', err);
-      store.set('authReady', true); // still show button so user can try
+      gapiReadyResolve(); // unblock waiting callers even on failure
+      store.set('authReady', true);
     }
   });
 }

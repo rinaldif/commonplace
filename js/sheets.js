@@ -1,16 +1,10 @@
-import { withAuth } from './auth.js';
-
-function ensureSheetsApi() {
-  if (!gapi?.client?.sheets) {
-    throw new Error('Google Sheets API not ready. Please wait a moment and try again.');
-  }
-}
+import { withAuth, gapiReady } from './auth.js';
 
 /**
  * Read all rows from a sheet tab, returning an array of objects.
  */
 export async function readRows(spreadsheetId, sheetName) {
-  ensureSheetsApi();
+  await gapiReady;
   return withAuth(async () => {
     const response = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
@@ -32,7 +26,7 @@ export async function readRows(spreadsheetId, sheetName) {
  * Read just the header row.
  */
 export async function readHeaders(spreadsheetId, sheetName) {
-  ensureSheetsApi();
+  await gapiReady;
   return withAuth(async () => {
     const response = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
@@ -46,7 +40,7 @@ export async function readHeaders(spreadsheetId, sheetName) {
  * Append a single row to the sheet.
  */
 export async function appendRow(spreadsheetId, sheetName, headers, data) {
-  ensureSheetsApi();
+  await gapiReady;
   return withAuth(async () => {
     const rowValues = headers.map(h => data[h] ?? '');
     await gapi.client.sheets.spreadsheets.values.append({

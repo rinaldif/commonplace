@@ -21,7 +21,8 @@ export function onGapiLoaded() {
       maybeEnableAuth();
     } catch (err) {
       console.error('gapi init failed:', err);
-      gapiReadyResolve(); // unblock waiting callers even on failure
+      // We still resolve to unblock, but we'll check for gapi.client.sheets later
+      gapiReadyResolve(); 
       store.set('authReady', true);
     }
   });
@@ -49,6 +50,8 @@ function handleTokenResponse(response) {
     store.set('isAuthenticated', false);
     return;
   }
+  // Important: set the token in gapi.client so it can be used for API calls
+  gapi.client.setToken(response);
   store.set('isAuthenticated', true);
   scheduleTokenRefresh(response.expires_in || 3600);
 }

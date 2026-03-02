@@ -5,6 +5,9 @@ import { withAuth, gapiReady } from './auth.js';
  */
 export async function readRows(spreadsheetId, sheetName) {
   await gapiReady;
+  if (!gapi.client?.sheets) {
+    throw new Error('Google Sheets API failed to load. Please check your internet connection and try again.');
+  }
   return withAuth(async () => {
     const response = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
@@ -27,6 +30,9 @@ export async function readRows(spreadsheetId, sheetName) {
  */
 export async function readHeaders(spreadsheetId, sheetName) {
   await gapiReady;
+  if (!gapi.client?.sheets) {
+    throw new Error('Google Sheets API failed to load. Please check your internet connection and try again.');
+  }
   return withAuth(async () => {
     const response = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
@@ -41,6 +47,9 @@ export async function readHeaders(spreadsheetId, sheetName) {
  */
 export async function appendRow(spreadsheetId, sheetName, headers, data) {
   await gapiReady;
+  if (!gapi.client?.sheets) {
+    throw new Error('Google Sheets API failed to load. Please check your internet connection and try again.');
+  }
   return withAuth(async () => {
     const rowValues = headers.map(h => data[h] ?? '');
     await gapi.client.sheets.spreadsheets.values.append({

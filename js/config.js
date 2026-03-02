@@ -4,7 +4,7 @@ export const API_KEY = 'AIzaSyDcjc37jM-q5hdnZlMxu-mRgsiekjmVfRo';
 
 // Google API config
 export const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
-export const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
+export const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/sheets/v4/rest';
 
 // Quote types
 export const TYPE_PREFIX = {

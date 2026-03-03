@@ -6,7 +6,7 @@ import { withAuth, gapiReady } from './auth.js';
 export async function listSpreadsheets() {
   await gapiReady;
   if (!gapi.client?.drive) {
-    throw new Error('Google Drive API failed to load.');
+    throw new Error('Google Drive API (metadata) failed to load. Ensure you have enabled it in Google Cloud Console.');
   }
   return withAuth(async () => {
     const response = await gapi.client.drive.files.list({
@@ -25,7 +25,7 @@ export async function listSpreadsheets() {
 export async function getSheetNames(spreadsheetId) {
   await gapiReady;
   if (!gapi.client?.sheets) {
-    throw new Error('Google Sheets API failed to load.');
+    throw new Error('Google Sheets API failed to load. Ensure you have enabled it in Google Cloud Console.');
   }
   return withAuth(async () => {
     const response = await gapi.client.sheets.spreadsheets.get({

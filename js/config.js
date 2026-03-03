@@ -3,8 +3,11 @@ export const CLIENT_ID = '326678024332-9lrn3a7dsd9pqpmst41t7unprh4a41it.apps.goo
 export const API_KEY = 'AIzaSyDcjc37jM-q5hdnZlMxu-mRgsiekjmVfRo';
 
 // Google API config
-export const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
-export const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/sheets/v4/rest';
+export const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.metadata.readonly';
+export const DISCOVERY_DOCS = [
+  'https://www.googleapis.com/discovery/v1/apis/sheets/v4/rest',
+  'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
+];
 
 // Quote types
 export const TYPE_PREFIX = {

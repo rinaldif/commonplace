@@ -1,7 +1,9 @@
 import { store } from './store.js';
-import { readRows, readHeaders, appendRow } from './sheets.js';
+import { readRows, readHeaders, appendRow, listSpreadsheets, getSheetNames } from './sheets.js';
 import { generateQid } from './utils/qid.js';
 import { todayISO, currentYear } from './utils/format.js';
+
+export { listSpreadsheets, getSheetNames };
 
 export async function loadQuotes() {
   const spreadsheetId = store.get('spreadsheetId');

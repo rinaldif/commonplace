@@ -28,64 +28,31 @@ function render(container) {
   const sheetSection = el('div', { class: 'settings__section' });
   sheetSection.appendChild(el('h2', { class: 'settings__section-title' }, 'Google Sheet'));
   sheetSection.appendChild(el('p', { class: 'settings__description' },
-    'Paste the URL of your Google Sheet (or just the spreadsheet ID).',
+    'Select a spreadsheet from your Google Drive.',
   ));
 
-  const sheetRow = el('div', { class: 'settings__sheet-input' });
-  const sheetInput = el('input', {
-    class: 'form-input',
-    type: 'text',
-    placeholder: 'https://docs.google.com/spreadsheets/d/.../edit',
-    value: store.get('spreadsheetId'),
-  });
-  const connectBtn = el('button', {
-    class: 'btn btn--primary',
-    onClick: async () => {
-      const raw = sheetInput.value.trim();
-      if (!raw) {
-        showToast('Please enter a sheet URL or ID', 'error');
-        return;
-      }
-      const id = extractSpreadsheetId(raw);
-      connectBtn.disabled = true;
-      connectBtn.textContent = 'Connecting...';
-      try {
-        const { validateSheet } = window.__cpbData || {};
-        if (validateSheet) {
-          await validateSheet(id);
-        }
-        store.set('spreadsheetId', id);
-        sheetInput.value = id;
-        showToast('Sheet connected!', 'success');
-        // Load data
-        const { loadQuotes } = window.__cpbData || {};
-        if (loadQuotes) loadQuotes();
-      } catch (err) {
-        showToast(`Failed to connect: ${err.message}`, 'error');
-      } finally {
-        connectBtn.disabled = false;
-        connectBtn.textContent = 'Connect';
-      }
-    },
-  }, 'Connect');
-  sheetRow.append(sheetInput, connectBtn);
-  sheetSection.appendChild(sheetRow);
-
-  // Sheet name
-  const sheetNameGroup = el('div', { class: 'form-group' },
-    el('label', { class: 'form-label' }, 'Sheet tab name (default: Sheet1)'),
+  const sheetGroup = el('div', { class: 'form-group' });
+  const sheetSelect = el('select', { class: 'form-input' },
+    el('option', { value: '' }, 'Select a spreadsheet...'),
   );
-  const sheetNameInput = el('input', {
-    class: 'form-input',
-    type: 'text',
-    value: store.get('sheetName'),
-    placeholder: 'Sheet1',
-  });
-  sheetNameInput.addEventListener('change', () => {
-    store.set('sheetName', sheetNameInput.value.trim() || 'Sheet1');
-  });
-  sheetNameGroup.appendChild(sheetNameInput);
-  sheetSection.appendChild(sheetNameGroup);
+  const refreshBtn = el('button', {
+    class: 'btn btn--ghost btn--sm',
+    style: 'margin-top: 0.5rem',
+    onClick: () => fetchSheets(),
+  }, 'Refresh list');
+
+  sheetGroup.append(sheetSelect, refreshBtn);
+  sheetSection.appendChild(sheetGroup);
+
+  // Tab section
+  const tabGroup = el('div', { class: 'form-group' },
+    el('label', { class: 'form-label' }, 'Sheet Tab (e.g., Sheet1)'),
+  );
+  const tabSelect = el('select', { class: 'form-input' },
+    el('option', { value: '' }, 'Select a tab...'),
+  );
+  tabGroup.appendChild(tabSelect);
+  sheetSection.appendChild(tabGroup);
 
   // Current connection status
   const sheetStatus = el('div', { class: 'settings__status' });
@@ -97,18 +64,96 @@ function render(container) {
   wrapper.appendChild(sheetSection);
   container.appendChild(wrapper);
 
+  async function fetchSheets() {
+    const isAuth = store.get('isAuthenticated');
+    if (!isAuth) return;
+
+    sheetSelect.disabled = true;
+    sheetSelect.innerHTML = '<option value="">Loading spreadsheets...</option>';
+    
+    try {
+      const { listSpreadsheets } = window.__cpbData || {};
+      if (!listSpreadsheets) return;
+      
+      const files = await listSpreadsheets();
+      sheetSelect.innerHTML = '<option value="">Select a spreadsheet...</option>';
+      files.forEach(file => {
+        const opt = el('option', { value: file.id }, file.name);
+        if (file.id === store.get('spreadsheetId')) opt.selected = true;
+        sheetSelect.appendChild(opt);
+      });
+      
+      if (store.get('spreadsheetId')) {
+        fetchTabs(store.get('spreadsheetId'));
+      }
+    } catch (err) {
+      showToast(`Failed to fetch sheets: ${err.message}`, 'error');
+    } finally {
+      sheetSelect.disabled = false;
+    }
+  }
+
+  async function fetchTabs(spreadsheetId) {
+    if (!spreadsheetId) return;
+    tabSelect.disabled = true;
+    tabSelect.innerHTML = '<option value="">Loading tabs...</option>';
+
+    try {
+      const { getSheetNames } = window.__cpbData || {};
+      if (!getSheetNames) return;
+
+      const tabs = await getSheetNames(spreadsheetId);
+      tabSelect.innerHTML = '';
+      tabs.forEach(tab => {
+        const opt = el('option', { value: tab }, tab);
+        if (tab === store.get('sheetName')) opt.selected = true;
+        tabSelect.appendChild(opt);
+      });
+
+      // If current sheetName isn't in the list, select the first one
+      if (!tabs.includes(store.get('sheetName')) && tabs.length > 0) {
+        store.set('sheetName', tabs[0]);
+      }
+    } catch (err) {
+      showToast(`Failed to fetch tabs: ${err.message}`, 'error');
+    } finally {
+      tabSelect.disabled = false;
+    }
+  }
+
+  sheetSelect.addEventListener('change', () => {
+    const id = sheetSelect.value;
+    if (id) {
+      store.set('spreadsheetId', id);
+      fetchTabs(id);
+      // Load data for the new sheet
+      const { loadQuotes } = window.__cpbData || {};
+      if (loadQuotes) loadQuotes();
+    }
+  });
+
+  tabSelect.addEventListener('change', () => {
+    const name = tabSelect.value;
+    if (name) {
+      store.set('sheetName', name);
+      const { loadQuotes } = window.__cpbData || {};
+      if (loadQuotes) loadQuotes();
+    }
+  });
+
   // Reactive updates
   function updateAuth() {
     const isAuth = store.get('isAuthenticated');
     authDot.className = `settings__status-dot settings__status-dot--${isAuth ? 'connected' : 'disconnected'}`;
     authText.textContent = isAuth ? 'Signed in' : 'Not signed in';
+    if (isAuth) fetchSheets();
   }
 
   function updateSheet() {
     const id = store.get('spreadsheetId');
     const hasSheet = !!id;
     sheetDot.className = `settings__status-dot settings__status-dot--${hasSheet ? 'connected' : 'disconnected'}`;
-    sheetText.textContent = hasSheet ? `Connected: ${id.slice(0, 20)}...` : 'Not connected';
+    sheetText.textContent = hasSheet ? `Connected` : 'Not connected';
   }
 
   unsubs.push(store.subscribe('isAuthenticated', updateAuth));

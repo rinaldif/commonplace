@@ -1,4 +1,4 @@
-import { CLIENT_ID, API_KEY, SCOPES, DISCOVERY_DOC } from './config.js';
+import { CLIENT_ID, API_KEY, SCOPES, DISCOVERY_DOCS } from './config.js';
 import { store } from './store.js';
 
 let tokenClient = null;
@@ -14,7 +14,7 @@ export function onGapiLoaded() {
     try {
       await gapi.client.init({
         apiKey: API_KEY,
-        discoveryDocs: [DISCOVERY_DOC],
+        discoveryDocs: DISCOVERY_DOCS,
       });
       gapiInited = true;
       gapiReadyResolve();

@@ -1,6 +1,41 @@
 import { withAuth, gapiReady } from './auth.js';
 
 /**
+ * List all spreadsheets the user has access to.
+ */
+export async function listSpreadsheets() {
+  await gapiReady;
+  if (!gapi.client?.drive) {
+    throw new Error('Google Drive API failed to load.');
+  }
+  return withAuth(async () => {
+    const response = await gapi.client.drive.files.list({
+      q: "mimeType = 'application/vnd.google-apps.spreadsheet'",
+      fields: 'files(id, name)',
+      orderBy: 'viewedByMeTime desc',
+      pageSize: 50,
+    });
+    return response.result.files || [];
+  });
+}
+
+/**
+ * Get the names of all sheets (tabs) within a spreadsheet.
+ */
+export async function getSheetNames(spreadsheetId) {
+  await gapiReady;
+  if (!gapi.client?.sheets) {
+    throw new Error('Google Sheets API failed to load.');
+  }
+  return withAuth(async () => {
+    const response = await gapi.client.sheets.spreadsheets.get({
+      spreadsheetId,
+    });
+    return response.result.sheets.map(s => s.properties.title);
+  });
+}
+
+/**
  * Read all rows from a sheet tab, returning an array of objects.
  */
 export async function readRows(spreadsheetId, sheetName) {

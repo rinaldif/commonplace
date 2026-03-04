@@ -2,7 +2,7 @@ import { onGapiLoaded, onGisLoaded, signIn, signOut, gapiReady } from './auth.js
 import { store } from './store.js';
 import { initRouter } from './router.js';
 import { renderNav } from './components/nav.js';
-import { loadQuotes, applyFilters, addQuote, validateSheet, listSpreadsheets, getSheetNames } from './data.js';
+import { loadQuotes, applyFilters, addQuote, validateSheet, listSpreadsheets, getSheetNames, createNewSheet } from './data.js';
 
 // Register views (each calls registerRoute on import)
 import './views/browse.js';
@@ -11,7 +11,7 @@ import './views/books.js';
 import './views/settings.js';
 
 // Expose data functions for views (avoids circular imports)
-window.__cpbData = { loadQuotes, applyFilters, addQuote, validateSheet, listSpreadsheets, getSheetNames };
+window.__cpbData = { loadQuotes, applyFilters, addQuote, validateSheet, listSpreadsheets, getSheetNames, createNewSheet };
 
 // Wire Google library callbacks
 window.__onGapiLoaded = onGapiLoaded;

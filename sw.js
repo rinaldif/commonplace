@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cpb-v9';
+const CACHE_NAME = 'cpb-v10';
 const SHELL_ASSETS = [
   './',
   './index.html',

@@ -1,9 +1,20 @@
 import { store } from './store.js';
-import { readRows, readHeaders, appendRow, listSpreadsheets, getSheetNames } from './sheets.js';
+import { readRows, readHeaders, appendRow, listSpreadsheets, getSheetNames, createSpreadsheet } from './sheets.js';
 import { generateQid } from './utils/qid.js';
 import { todayISO, currentYear } from './utils/format.js';
+import { SHEET_COLUMNS } from './config.js';
 
-export { listSpreadsheets, getSheetNames };
+export { listSpreadsheets, getSheetNames, createSpreadsheet };
+
+export async function createNewSheet() {
+  const result = await createSpreadsheet(SHEET_COLUMNS);
+  store.batch({
+    spreadsheetId: result.spreadsheetId,
+    sheetName: result.sheetName,
+  });
+  await loadQuotes();
+  return result;
+}
 
 export async function loadQuotes() {
   const spreadsheetId = store.get('spreadsheetId');

@@ -28,7 +28,35 @@ function render(container) {
   const sheetSection = el('div', { class: 'settings__section' });
   sheetSection.appendChild(el('h2', { class: 'settings__section-title' }, 'Google Sheet'));
   sheetSection.appendChild(el('p', { class: 'settings__description' },
-    'Select a spreadsheet from your Google Drive.',
+    'Select a spreadsheet from your Google Drive or create a new one.',
+  ));
+
+  const createBtn = el('button', {
+    class: 'btn btn--primary btn--full',
+    style: 'margin-bottom: 1.5rem',
+    onClick: async () => {
+      createBtn.disabled = true;
+      createBtn.textContent = 'Creating...';
+      try {
+        const { createNewSheet } = window.__cpbData || {};
+        if (createNewSheet) {
+          await createNewSheet();
+          showToast('New Commonplace Book created!', 'success');
+          // Refresh lists
+          fetchSheets();
+        }
+      } catch (err) {
+        showToast(`Failed to create sheet: ${err.message}`, 'error');
+      } finally {
+        createBtn.disabled = false;
+        createBtn.textContent = 'Create New Commonplace Book';
+      }
+    }
+  }, 'Create New Commonplace Book');
+  sheetSection.appendChild(createBtn);
+
+  sheetSection.appendChild(el('p', { class: 'settings__description', style: 'font-size: 0.8rem; margin-bottom: 0.5rem;' },
+    'OR SELECT EXISTING:',
   ));
 
   const sheetGroup = el('div', { class: 'form-group' });

@@ -1,6 +1,38 @@
 import { withAuth, gapiReady } from './auth.js';
 
 /**
+ * Create a new "Commonplace Book" spreadsheet with headers.
+ */
+export async function createSpreadsheet(headers) {
+  await gapiReady;
+  if (!gapi.client?.sheets) {
+    throw new Error('Google Sheets API failed to load.');
+  }
+  return withAuth(async () => {
+    // 1. Create the spreadsheet
+    const response = await gapi.client.sheets.spreadsheets.create({
+      resource: {
+        properties: { title: 'My Commonplace Book' },
+      },
+    });
+    const spreadsheetId = response.result.spreadsheetId;
+    const sheetName = response.result.sheets[0].properties.title;
+
+    // 2. Add headers to the first row
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${sheetName}!1:1`,
+      valueInputOption: 'USER_ENTERED',
+      resource: {
+        values: [headers],
+      },
+    });
+
+    return { spreadsheetId, sheetName };
+  });
+}
+
+/**
  * List all spreadsheets the user has access to.
  */
 export async function listSpreadsheets() {

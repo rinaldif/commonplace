@@ -7,7 +7,8 @@ const PRE_CACHE = [
   './css/base.css',
   './css/layout.css',
   './js/app.js',
-  './js/config.js'
+  './js/config.js',
+  './js/starter.js'
 ];
 
 // On install, pre-cache the essential "shell"

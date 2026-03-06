@@ -14,6 +14,34 @@ function render(container) {
   unsubs = [];
   const wrapper = el('div', { class: 'browse' });
 
+  // ──── Starter Mode Banner ────
+  const starterBanner = el('div', { 
+    class: 'starter-banner',
+    style: 'background: var(--color-primary-light); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; border: 1px dashed var(--color-primary);',
+    hidden: true 
+  });
+  const starterText = el('div', { style: 'flex: 1; padding-right: 0.5rem;' }, 
+    el('strong', {}, 'Starter Mode:'), ' Viewing sample quotes. Want to keep them?'
+  );
+  const starterImportBtn = el('button', {
+    class: 'btn btn--primary btn--sm',
+    onClick: async () => {
+      starterImportBtn.disabled = true;
+      starterImportBtn.textContent = 'Importing...';
+      try {
+        const { importStarterQuotes } = window.__cpbData || {};
+        if (importStarterQuotes) await importStarterQuotes();
+        showToast('Quotes imported successfully!', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+        starterImportBtn.disabled = false;
+        starterImportBtn.textContent = 'Import';
+      }
+    }
+  }, 'Import to Sheet');
+  starterBanner.append(starterText, starterImportBtn);
+  wrapper.appendChild(starterBanner);
+
   // ──── Hero: Generate button + count ────
   const hero = el('div', { class: 'browse-hero' });
   const countEl = el('div', { class: 'browse-hero__count' });
@@ -239,6 +267,7 @@ function render(container) {
     updateFilterBadge();
     updateActiveFilterTags();
     refreshMultiselects();
+    starterBanner.hidden = !store.get('isStarterMode');
   }
 
   function updateLoading() {

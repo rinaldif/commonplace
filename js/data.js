@@ -1,8 +1,9 @@
 import { store } from './store.js';
-import { readRows, readHeaders, appendRow, listSpreadsheets, getSheetNames, createSpreadsheet } from './sheets.js';
+import { readRows, readHeaders, appendRow, appendRows, listSpreadsheets, getSheetNames, createSpreadsheet } from './sheets.js';
 import { generateQid } from './utils/qid.js';
 import { todayISO, currentYear } from './utils/format.js';
 import { SHEET_COLUMNS } from './config.js';
+import { STARTER_QUOTES } from './starter.js';
 
 export { listSpreadsheets, getSheetNames, createSpreadsheet };
 
@@ -25,10 +26,47 @@ export async function loadQuotes() {
   store.set('dataError', null);
   try {
     const quotes = await readRows(spreadsheetId, sheetName);
-    store.set('quotes', quotes);
+    
+    if (quotes.length === 0) {
+      // Empty sheet! Enable starter mode with sample data
+      store.batch({
+        isStarterMode: true,
+        quotes: STARTER_QUOTES,
+      });
+    } else {
+      store.batch({
+        isStarterMode: false,
+        quotes: quotes,
+      });
+    }
     applyFilters();
   } catch (err) {
     store.set('dataError', err.message || 'Failed to load quotes');
+  } finally {
+    store.set('isLoading', false);
+  }
+}
+
+export async function importStarterQuotes() {
+  const spreadsheetId = store.get('spreadsheetId');
+  const sheetName = store.get('sheetName');
+  if (!spreadsheetId) return;
+
+  store.set('isLoading', true);
+  try {
+    const headers = await readHeaders(spreadsheetId, sheetName);
+    const quotesWithMetadata = STARTER_QUOTES.map((q, i) => ({
+      ...q,
+      qid: `S${(i + 1).toString().padStart(3, '0')}`,
+      year: currentYear(),
+      entry_date: todayISO(),
+    }));
+
+    await appendRows(spreadsheetId, sheetName, headers, quotesWithMetadata);
+    store.set('isStarterMode', false);
+    await loadQuotes();
+  } catch (err) {
+    throw new Error(`Failed to import: ${err.message}`);
   } finally {
     store.set('isLoading', false);
   }

@@ -64,6 +64,7 @@ export const store = new Store({
   filteredQuotes: [],
   isLoading: false,
   dataError: null,
+  isStarterMode: false,
 
   // Filters
   filterLang: 'all',

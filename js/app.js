@@ -21,9 +21,32 @@ window.__onGisLoaded = onGisLoaded;
 if (window.gapi?.load) onGapiLoaded();
 if (window.google?.accounts?.oauth2) onGisLoaded();
 
-// PWA service worker
+// PWA service worker registration with update detection
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      reg.onupdatefound = () => {
+        const installingWorker = reg.installing;
+        installingWorker.onstatechange = () => {
+          if (installingWorker.state === 'installed') {
+            if (navigator.serviceWorker.controller) {
+              // New content is available; it will be used on next reload.
+              console.log('New version available. Please refresh.');
+            }
+          }
+        };
+      };
+    }).catch(err => console.error('SW registration failed:', err));
+  });
+
+  // Reload when the new service worker takes over
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      window.location.reload();
+      refreshing = true;
+    }
+  });
 }
 
 // Auth button

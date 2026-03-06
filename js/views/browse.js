@@ -1,6 +1,6 @@
 import { registerRoute } from '../router.js';
 import { store } from '../store.js';
-import { el, clear } from '../utils/dom.js';
+import { el, clear, setHtml } from '../utils/dom.js';
 import { showToast } from '../components/toast.js';
 import { formatQuoteForCopy } from '../utils/format.js';
 import { TYPE_LABELS, LANGUAGES } from '../config.js';
@@ -77,9 +77,10 @@ function render(container) {
   const langGroup = el('div', { class: 'form-group' },
     el('label', { class: 'form-label' }, 'Language'),
   );
-  const langSelect = el('select', { class: 'form-select' });
-  langSelect.innerHTML = `<option value="all">All</option>` +
-    Object.entries(LANGUAGES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  const langSelect = el('select', { class: 'form-select' },
+    el('option', { value: 'all' }, 'All'),
+    ...Object.entries(LANGUAGES).map(([k, v]) => el('option', { value: k }, v))
+  );
   langSelect.value = store.get('filterLang');
   langSelect.addEventListener('change', () => {
     store.set('filterLang', langSelect.value);
@@ -92,9 +93,10 @@ function render(container) {
   const typeGroup = el('div', { class: 'form-group' },
     el('label', { class: 'form-label' }, 'Type'),
   );
-  const typeSelect = el('select', { class: 'form-select' });
-  typeSelect.innerHTML = `<option value="all">All</option>` +
-    Object.entries(TYPE_LABELS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  const typeSelect = el('select', { class: 'form-select' },
+    el('option', { value: 'all' }, 'All'),
+    ...Object.entries(TYPE_LABELS).map(([k, v]) => el('option', { value: k }, v))
+  );
   typeSelect.value = store.get('filterType');
   typeSelect.addEventListener('change', () => {
     store.set('filterType', typeSelect.value);
@@ -170,10 +172,11 @@ function render(container) {
   function updateCount() {
     const filtered = store.get('filteredQuotes');
     const total = store.get('quotes');
+    clear(countEl);
     if (filtered.length === total.length) {
-      countEl.innerHTML = `<strong>${total.length}</strong> quotes`;
+      countEl.append(el('strong', {}, total.length), ' quotes');
     } else {
-      countEl.innerHTML = `<strong>${filtered.length}</strong> of ${total.length} quotes`;
+      countEl.append(el('strong', {}, filtered.length), ` of ${total.length} quotes`);
     }
   }
 

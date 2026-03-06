@@ -1,6 +1,6 @@
 import { registerRoute } from '../router.js';
 import { store } from '../store.js';
-import { el } from '../utils/dom.js';
+import { el, clear } from '../utils/dom.js';
 import { showToast } from '../components/toast.js';
 import { ICONS } from '../icons.js';
 
@@ -97,14 +97,16 @@ function render(container) {
     if (!isAuth) return;
 
     sheetSelect.disabled = true;
-    sheetSelect.innerHTML = '<option value="">Loading spreadsheets...</option>';
+    clear(sheetSelect);
+    sheetSelect.appendChild(el('option', { value: '' }, 'Loading spreadsheets...'));
     
     try {
       const { listSpreadsheets } = window.__cpbData || {};
       if (!listSpreadsheets) return;
       
       const files = await listSpreadsheets();
-      sheetSelect.innerHTML = '<option value="">Select a spreadsheet...</option>';
+      clear(sheetSelect);
+      sheetSelect.appendChild(el('option', { value: '' }, 'Select a spreadsheet...'));
       files.forEach(file => {
         const opt = el('option', { value: file.id }, file.name);
         if (file.id === store.get('spreadsheetId')) opt.selected = true;
@@ -124,14 +126,15 @@ function render(container) {
   async function fetchTabs(spreadsheetId) {
     if (!spreadsheetId) return;
     tabSelect.disabled = true;
-    tabSelect.innerHTML = '<option value="">Loading tabs...</option>';
+    clear(tabSelect);
+    tabSelect.appendChild(el('option', { value: '' }, 'Loading tabs...'));
 
     try {
       const { getSheetNames } = window.__cpbData || {};
       if (!getSheetNames) return;
 
       const tabs = await getSheetNames(spreadsheetId);
-      tabSelect.innerHTML = '';
+      clear(tabSelect);
       tabs.forEach(tab => {
         const opt = el('option', { value: tab }, tab);
         if (tab === store.get('sheetName')) opt.selected = true;
@@ -188,11 +191,6 @@ function render(container) {
   unsubs.push(store.subscribe('spreadsheetId', updateSheet));
   updateAuth();
   updateSheet();
-}
-
-function extractSpreadsheetId(urlOrId) {
-  const match = urlOrId.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  return match ? match[1] : urlOrId;
 }
 
 function destroy() {

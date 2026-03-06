@@ -1,4 +1,5 @@
 import { store } from './store.js';
+import { clear } from './utils/dom.js';
 
 const routes = new Map();
 
@@ -44,7 +45,7 @@ export function initRouter(containerEl) {
     store.set('currentView', hash);
     const view = routes.get(hash);
     if (view) {
-      containerEl.innerHTML = '';
+      clear(containerEl);
       view.render(containerEl);
     }
   }

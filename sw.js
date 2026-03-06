@@ -1,63 +1,65 @@
-const CACHE_NAME = 'cpb-v10';
-const SHELL_ASSETS = [
+const CACHE_NAME = 'cpb-dynamic-v1';
+const PRE_CACHE = [
   './',
   './index.html',
   './manifest.json',
   './css/variables.css',
   './css/base.css',
-  './css/components.css',
   './css/layout.css',
-  './css/views/browse.css',
-  './css/views/add.css',
-  './css/views/settings.css',
-  './css/views/books.css',
   './js/app.js',
-  './js/config.js',
-  './js/auth.js',
-  './js/sheets.js',
-  './js/store.js',
-  './js/router.js',
-  './js/data.js',
-  './js/icons.js',
-  './js/utils/dom.js',
-  './js/utils/qid.js',
-  './js/utils/format.js',
-  './js/components/nav.js',
-  './js/components/toast.js',
-  './js/views/browse.js',
-  './js/views/add.js',
-  './js/views/settings.js',
-  './js/views/books.js',
-  './assets/icon-192.png',
-  './assets/icon-512.png',
+  './js/config.js'
 ];
 
+// On install, pre-cache the essential "shell"
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL_ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(PRE_CACHE))
   );
   self.skipWaiting();
 });
 
+// Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(names =>
-      Promise.all(
-        names.filter(name => name !== CACHE_NAME).map(name => caches.delete(name))
-      )
-    )
+    caches.keys().then(keys => Promise.all(
+      keys.map(key => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+      })
+    ))
   );
   self.clients.claim();
 });
 
+// Smart Fetch Strategy: Stale-While-Revalidate
 self.addEventListener('fetch', (event) => {
-  // Don't cache Google API calls
-  if (event.request.url.includes('googleapis.com') ||
-      event.request.url.includes('accounts.google.com') ||
-      event.request.url.includes('gstatic.com')) {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // 1. Skip non-GET requests and Google APIs (always fresh)
+  if (request.method !== 'GET' || 
+      url.hostname.includes('googleapis.com') || 
+      url.hostname.includes('accounts.google.com') ||
+      url.hostname.includes('gstatic.com')) {
     return;
   }
+
+  // 2. Strategy: Stale-While-Revalidate for local assets
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.match(request).then(cachedResponse => {
+        const fetchPromise = fetch(request).then(networkResponse => {
+          // If network request is successful, clone it and update the cache
+          if (networkResponse && networkResponse.status === 200) {
+            cache.put(request, networkResponse.clone());
+          }
+          return networkResponse;
+        }).catch(() => {
+          // If network fails, we just silently fail (already serving from cache)
+        });
+
+        // Return the cached response immediately, or wait for the network if not in cache
+        return cachedResponse || fetchPromise;
+      });
+    })
   );
 });

@@ -24,9 +24,9 @@ function render(container) {
   const typeGroup = el('div', { class: 'form-group add-type-selector' },
     el('label', { class: 'form-label' }, 'Quote Type'),
   );
-  const typeSelect = el('select', { class: 'form-select' });
-  typeSelect.innerHTML = Object.entries(TYPE_LABELS)
-    .map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  const typeSelect = el('select', { class: 'form-select' },
+    ...Object.entries(TYPE_LABELS).map(([k, v]) => el('option', { value: k }, v))
+  );
   typeGroup.appendChild(typeSelect);
   wrapper.appendChild(typeGroup);
 
@@ -161,9 +161,12 @@ function createComboSelect(label, column) {
   const quotes = store.get('quotes');
   const values = getUniqueValues(quotes, column);
 
-  select.innerHTML = `<option value="">-- Select --</option>` +
-    `<option value="__new__">+ Add new...</option>` +
-    values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  select.appendChild(el('option', { value: '' }, '-- Select --'));
+  select.appendChild(el('option', { value: '__new__' }, '+ Add new...'));
+  values.forEach(v => {
+    select.appendChild(el('option', { value: v }, v));
+  });
+  
   group.appendChild(select);
 
   const newInput = el('input', {
@@ -194,12 +197,6 @@ function getUniqueValues(data, column) {
     if (v) values.add(v);
   }
   return [...values].sort();
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
 }
 
 function destroy() {

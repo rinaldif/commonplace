@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cpb-dynamic-v1';
+const CACHE_NAME = 'cpb-dynamic-v2';
 const PRE_CACHE = [
   './',
   './index.html',

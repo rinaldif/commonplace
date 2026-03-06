@@ -110,6 +110,26 @@ export async function readHeaders(spreadsheetId, sheetName) {
 }
 
 /**
+ * Append a single row to the sheet.
+ */
+export async function appendRow(spreadsheetId, sheetName, headers, data) {
+  await gapiReady;
+  if (!gapi.client?.sheets) {
+    throw new Error('Google Sheets API failed to load.');
+  }
+  return withAuth(async () => {
+    const rowValues = headers.map(h => data[h] ?? '');
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: sheetName,
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      resource: { values: [rowValues] },
+    });
+  });
+}
+
+/**
  * Append multiple rows to the sheet in one call.
  */
 export async function appendRows(spreadsheetId, sheetName, headers, rowsData) {

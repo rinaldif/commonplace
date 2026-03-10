@@ -42,7 +42,6 @@ function render(container) {
         if (createNewSheet) {
           await createNewSheet();
           showToast('New Commonplace Book created!', 'success');
-          // Refresh lists
           fetchSheets();
         }
       } catch (err) {
@@ -153,11 +152,25 @@ function render(container) {
       booksTabSelect.appendChild(el('option', { value: '' }, 'Select Books tab...'));
 
       tabs.forEach(tab => {
-        quotesTabSelect.appendChild(el('option', { value: tab, selected: tab === store.get('sheetName') }, tab));
-        booksTabSelect.appendChild(el('option', { value: tab, selected: tab === store.get('booksSheetName') }, tab));
+        // Auto-select "quotes" or "books" if they exist and nothing is selected
+        const isQuotesTab = tab.toLowerCase() === 'quotes';
+        const isBooksTab = tab.toLowerCase() === 'books';
+        
+        const quotesSelected = tab === store.get('sheetName') || (!store.get('sheetName') && isQuotesTab);
+        const booksSelected = tab === store.get('booksSheetName') || (!store.get('booksSheetName') && isBooksTab);
+
+        quotesTabSelect.appendChild(el('option', { value: tab, selected: quotesSelected }, tab));
+        booksTabSelect.appendChild(el('option', { value: tab, selected: booksSelected }, tab));
+        
+        if (quotesSelected && !store.get('sheetName')) store.set('sheetName', tab);
+        if (booksSelected && !store.get('booksSheetName')) store.set('booksSheetName', tab);
       });
 
-      // If current names aren't in the list, don't auto-select to avoid confusion
+      // Load data for the newly selected tabs if they were auto-selected
+      const { loadQuotes, loadBooks } = window.__cpbData || {};
+      if (loadQuotes) loadQuotes();
+      if (loadBooks) loadBooks();
+
     } catch (err) {
       showToast(`Failed to fetch tabs: ${err.message}`, 'error');
     } finally {
@@ -192,7 +205,6 @@ function render(container) {
     }
   });
 
-  // Reactive updates
   function updateAuth() {
     const isAuth = store.get('isAuthenticated');
     authDot.className = `settings__status-dot settings__status-dot--${isAuth ? 'connected' : 'disconnected'}`;

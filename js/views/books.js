@@ -69,26 +69,27 @@ function renderStatsAndList(container, books) {
   );
 
   // Chart (Books per year)
-  // Ensure we only show recent years if there are many, or all of them
   const yearEntries = Object.entries(stats.byYear).sort((a, b) => a[0] - b[0]);
   const chart = el('div', { class: 'chart-container' },
     el('h3', { class: 'chart-title' }, 'Books per Year'),
-    el('div', { class: 'bar-chart' }, 
-      ...yearEntries.map(([year, count]) => {
-        const height = (count / stats.maxPerYear) * 100;
-        return el('div', { class: 'bar-wrapper' },
-          el('div', { 
-            class: 'bar', 
-            style: `height: ${height}%`, 
-            title: `${count} books in ${year}` 
-          }),
-          el('div', { class: 'bar-label' }, year)
-        );
-      })
+    el('div', { class: 'bar-chart-wrapper' },
+      el('div', { class: 'bar-chart' }, 
+        ...yearEntries.map(([year, count]) => {
+          const height = (count / stats.maxPerYear) * 100;
+          return el('div', { class: 'bar-wrapper' },
+            el('div', { 
+              class: 'bar', 
+              style: `height: ${height}%`, 
+              title: `${count} books in ${year}` 
+            }),
+            el('div', { class: 'bar-label' }, year)
+          );
+        })
+      )
     )
   );
 
-  // List section - Sorted descending by year_read, then by title
+  // List section - Sorted descending by year_read
   const sortedBooks = [...realBooks].sort((a, b) => {
     const yrA = parseInt(a.year_read) || 0;
     const yrB = parseInt(b.year_read) || 0;

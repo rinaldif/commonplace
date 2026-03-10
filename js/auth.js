@@ -48,11 +48,13 @@ function maybeEnableAuth() {
 function handleTokenResponse(response) {
   if (response.error) {
     store.set('isAuthenticated', false);
+    localStorage.removeItem('cpb_was_authenticated');
     return;
   }
   // Important: set the token in gapi.client so it can be used for API calls
   gapi.client.setToken(response);
   store.set('isAuthenticated', true);
+  localStorage.setItem('cpb_was_authenticated', 'true');
   scheduleTokenRefresh(response.expires_in || 3600);
 }
 
@@ -72,6 +74,12 @@ export function signIn() {
   tokenClient.requestAccessToken({ prompt: 'consent' });
 }
 
+/** Attempt to sign in silently. */
+export function trySilentSignIn() {
+  if (!tokenClient) return;
+  tokenClient.requestAccessToken({ prompt: '' });
+}
+
 /** Sign out and revoke token. */
 export function signOut() {
   const token = gapi.client.getToken();
@@ -80,6 +88,7 @@ export function signOut() {
     gapi.client.setToken(null);
   }
   if (refreshTimer) clearTimeout(refreshTimer);
+  localStorage.removeItem('cpb_was_authenticated');
   store.batch({
     isAuthenticated: false,
     quotes: [],

@@ -99,7 +99,7 @@ function renderAddForm(container) {
       try {
         await window.__cpbData.addBook(data);
         activeTab = 'list';
-        render(container.parentElement); // Re-render the whole view
+        render(container); // Re-render in the current container
       } catch (err) {
         alert('Failed to add book: ' + err.message);
       }

@@ -23,7 +23,7 @@ export function renderNav(navEl) {
       const btn = el('button', {
         class: `tab-nav__item${isActive ? ' tab-nav__item--active' : ''}`,
         'aria-label': route.label,
-        onClick: () => navigate(route.name)
+        onclick: () => navigate(route.name)
       }, iconSpan, labelSpan);
 
       navEl.appendChild(btn);

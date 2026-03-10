@@ -4,9 +4,11 @@ import { ICONS } from '../icons.js';
 import { store } from '../store.js';
 
 let activeTab = 'list'; // 'list' or 'add'
+let unsubs = [];
 
 function render(container) {
   const books = store.get('books') || [];
+  const isLoading = store.get('isLoadingBooks');
   
   const header = el('div', { class: 'view-header' },
     el('h2', { class: 'view-title' }, 'My Bookshelf'),
@@ -24,7 +26,9 @@ function render(container) {
 
   const content = el('div', { class: 'view-content' });
   
-  if (activeTab === 'list') {
+  if (isLoading && books.length === 0) {
+    content.appendChild(el('p', { class: 'loading' }, 'Loading books...'));
+  } else if (activeTab === 'list') {
     renderStatsAndList(content, books);
   } else {
     renderAddForm(content);
@@ -33,6 +37,13 @@ function render(container) {
   clear(container);
   container.appendChild(header);
   container.appendChild(content);
+
+  // Subscribe to data changes to re-render if needed
+  unsubs.forEach(fn => fn());
+  unsubs = [
+    store.subscribe('books', () => render(container)),
+    store.subscribe('isLoadingBooks', () => render(container))
+  ];
 }
 
 function renderStatsAndList(container, books) {
@@ -40,7 +51,7 @@ function renderStatsAndList(container, books) {
   const realBooks = books.filter(b => b.count && parseInt(b.count) > 0);
 
   if (realBooks.length === 0) {
-    container.appendChild(el('p', { class: 'empty-state' }, 'No books loaded yet. Go to "Add Book" to start!'));
+    container.appendChild(el('p', { class: 'empty-state' }, 'No books loaded yet. Check your Settings to select the correct "Books Tab".'));
     return;
   }
 
@@ -76,12 +87,12 @@ function renderStatsAndList(container, books) {
     el('h3', {}, 'Recently Read'),
     ...realBooks.slice().reverse().map(book => el('div', { class: 'book-item' },
       el('div', { class: 'book-info' },
-        el('div', { class: 'book-title' }, book.book_title),
-        el('div', { class: 'book-author' }, `by ${book.author_name}`),
+        el('div', { class: 'book-title' }, book.book_title || 'Untitled'),
+        el('div', { class: 'book-author' }, `by ${book.author_name || 'Unknown'}`),
       ),
       el('div', { class: 'book-meta' }, 
-        el('span', { class: 'badge' }, book.genre),
-        el('span', { class: 'book-year' }, book.year_read)
+        el('span', { class: 'badge' }, book.Language || book.genre || ''),
+        el('span', { class: 'book-year' }, book.year_read || '')
       )
     ))
   );
@@ -114,7 +125,7 @@ function renderAddForm(container) {
       try {
         await window.__cpbData.addBook(bookData);
         activeTab = 'list';
-        render(container); // Re-render in the current container
+        render(container);
       } catch (err) {
         alert('Failed to add book: ' + err.message);
       }
@@ -181,8 +192,14 @@ function calculateStats(books) {
   };
 }
 
+function destroy() {
+  unsubs.forEach(fn => fn());
+  unsubs = [];
+}
+
 registerRoute('books', {
   label: 'Books',
   icon: ICONS.books,
   render,
+  destroy,
 });

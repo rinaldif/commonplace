@@ -67,7 +67,8 @@ export const store = new Store({
   filteredQuotes: [],
   books: [],
   filteredBooks: [],
-  isLoading: false,
+  isLoadingQuotes: false,
+  isLoadingBooks: false,
   dataError: null,
   isStarterMode: false,
 

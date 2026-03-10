@@ -20,9 +20,9 @@ export async function createNewSheet() {
 export async function loadQuotes() {
   const spreadsheetId = store.get('spreadsheetId');
   const sheetName = store.get('sheetName');
-  if (!spreadsheetId) return;
+  if (!spreadsheetId || !sheetName) return;
 
-  store.set('isLoading', true);
+  store.set('isLoadingQuotes', true);
   store.set('dataError', null);
   try {
     const quotes = await readRows(spreadsheetId, sheetName);
@@ -44,16 +44,16 @@ export async function loadQuotes() {
     console.error('loadQuotes error:', err);
     store.set('dataError', err.message || 'Failed to load quotes. Ensure your sheet tab is named correctly.');
   } finally {
-    store.set('isLoading', false);
+    store.set('isLoadingQuotes', false);
   }
 }
 
 export async function loadBooks() {
   const spreadsheetId = store.get('spreadsheetId');
   const booksSheetName = store.get('booksSheetName');
-  if (!spreadsheetId) return;
+  if (!spreadsheetId || !booksSheetName) return;
 
-  store.set('isLoading', true);
+  store.set('isLoadingBooks', true);
   try {
     const books = await readRows(spreadsheetId, booksSheetName);
     store.batch({
@@ -63,16 +63,16 @@ export async function loadBooks() {
   } catch (err) {
     console.warn('Failed to load books:', err.message);
   } finally {
-    store.set('isLoading', false);
+    store.set('isLoadingBooks', false);
   }
 }
 
 export async function importStarterQuotes() {
   const spreadsheetId = store.get('spreadsheetId');
   const sheetName = store.get('sheetName');
-  if (!spreadsheetId) return;
+  if (!spreadsheetId || !sheetName) return;
 
-  store.set('isLoading', true);
+  store.set('isLoadingQuotes', true);
   try {
     const headers = await readHeaders(spreadsheetId, sheetName);
     const quotesWithMetadata = STARTER_QUOTES.map((q, i) => ({
@@ -88,7 +88,7 @@ export async function importStarterQuotes() {
   } catch (err) {
     throw new Error(`Failed to import: ${err.message}`);
   } finally {
-    store.set('isLoading', false);
+    store.set('isLoadingQuotes', false);
   }
 }
 

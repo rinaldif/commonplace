@@ -59,23 +59,24 @@
 .chart-container {
   margin-bottom: var(--space-8);
   background: var(--color-bg-secondary);
-  padding: var(--space-4);
+  padding: var(--space-6) var(--space-4) var(--space-4);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
 }
 
 .chart-title {
   font-size: var(--font-size-md);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-6);
   color: var(--color-text-secondary);
+  text-align: center;
 }
 
 .bar-chart {
   display: flex;
   align-items: flex-end;
-  height: 120px;
-  gap: var(--space-2);
-  padding-top: var(--space-4);
+  height: 150px;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
 }
 
 .bar-wrapper {
@@ -88,21 +89,23 @@
 
 .bar {
   width: 100%;
-  max-width: 30px;
+  max-width: 40px;
   background: var(--color-primary);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  transition: height 0.3s ease;
-  opacity: 0.8;
+  transition: all 0.3s ease;
+  min-height: 4px; /* Ensure even 0 is a tiny bit visible or handles min-height */
 }
 
 .bar:hover {
-  opacity: 1;
+  filter: brightness(1.2);
+  cursor: help;
 }
 
 .bar-label {
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--color-text-secondary);
-  margin-top: var(--space-1);
+  margin-top: var(--space-2);
 }
 
 /* Book List */
@@ -110,6 +113,11 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+
+.books-list h3 {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-lg);
 }
 
 .book-item {
@@ -125,6 +133,7 @@
 .book-title {
   font-weight: 600;
   color: var(--color-text);
+  margin-bottom: 2px;
 }
 
 .book-author {
@@ -136,21 +145,23 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: var(--space-1);
+  gap: var(--space-2);
 }
 
 .badge {
   font-size: 10px;
   background: var(--color-bg);
-  padding: 2px 6px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
+  white-space: nowrap;
 }
 
 .book-year {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
+  font-weight: 500;
 }
 
 /* Form */
@@ -178,11 +189,12 @@
 
 .form-group input,
 .form-group select {
-  padding: var(--space-2);
+  padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg);
   color: var(--color-text);
+  font-size: var(--font-size-md);
 }
 
 .form-row {
@@ -194,5 +206,13 @@
 .empty-state {
   text-align: center;
   padding: var(--space-12) var(--space-4);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.loading {
+  text-align: center;
+  padding: var(--space-12);
   color: var(--color-text-secondary);
 }

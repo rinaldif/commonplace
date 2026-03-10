@@ -47,7 +47,7 @@ function render(container) {
 }
 
 function renderStatsAndList(container, books) {
-  // Filter out the blank/separator rows (where count is 0 or empty)
+  // Filter out the blank/separator rows
   const realBooks = books.filter(b => b.count && parseInt(b.count) > 0);
 
   if (realBooks.length === 0) {
@@ -68,31 +68,44 @@ function renderStatsAndList(container, books) {
     )
   );
 
-  // Simple Chart (Books per year)
+  // Chart (Books per year)
+  // Ensure we only show recent years if there are many, or all of them
+  const yearEntries = Object.entries(stats.byYear).sort((a, b) => a[0] - b[0]);
   const chart = el('div', { class: 'chart-container' },
     el('h3', { class: 'chart-title' }, 'Books per Year'),
     el('div', { class: 'bar-chart' }, 
-      ...Object.entries(stats.byYear).map(([year, count]) => {
+      ...yearEntries.map(([year, count]) => {
         const height = (count / stats.maxPerYear) * 100;
         return el('div', { class: 'bar-wrapper' },
-          el('div', { class: 'bar', style: `height: ${height}%`, title: `${count} books` }),
+          el('div', { 
+            class: 'bar', 
+            style: `height: ${height}%`, 
+            title: `${count} books in ${year}` 
+          }),
           el('div', { class: 'bar-label' }, year)
         );
       })
     )
   );
 
-  // List section
+  // List section - Sorted descending by year_read, then by title
+  const sortedBooks = [...realBooks].sort((a, b) => {
+    const yrA = parseInt(a.year_read) || 0;
+    const yrB = parseInt(b.year_read) || 0;
+    if (yrB !== yrA) return yrB - yrA;
+    return (a.book_title || '').localeCompare(b.book_title || '');
+  });
+
   const list = el('div', { class: 'books-list' },
-    el('h3', {}, 'Recently Read'),
-    ...realBooks.slice().reverse().map(book => el('div', { class: 'book-item' },
+    el('h3', {}, 'Reading History'),
+    ...sortedBooks.map(book => el('div', { class: 'book-item' },
       el('div', { class: 'book-info' },
         el('div', { class: 'book-title' }, book.book_title || 'Untitled'),
         el('div', { class: 'book-author' }, `by ${book.author_name || 'Unknown'}`),
       ),
       el('div', { class: 'book-meta' }, 
-        el('span', { class: 'badge' }, book.Language || book.genre || ''),
-        el('span', { class: 'book-year' }, book.year_read || '')
+        el('span', { class: 'badge' }, book.Language || book.genre || 'Book'),
+        el('span', { class: 'book-year' }, book.year_read || 'N/A')
       )
     ))
   );
@@ -110,7 +123,6 @@ function renderAddForm(container) {
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
       
-      // Map form fields to our sheet columns
       const bookData = {
         count: '1',
         book_title: data.title,
@@ -181,13 +193,9 @@ function calculateStats(books) {
     }
   });
 
-  const years = Object.keys(byYear).sort();
-  const sortedByYear = {};
-  years.forEach(y => sortedByYear[y] = byYear[y]);
-
   return {
     thisYear: thisYearCount,
-    byYear: sortedByYear,
+    byYear: byYear,
     maxPerYear: Math.max(...Object.values(byYear), 1)
   };
 }

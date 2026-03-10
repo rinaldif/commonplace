@@ -23,10 +23,17 @@ export const TYPE_LABELS = {
 };
 
 // Expected sheet columns (order matters for writes)
-export const SHEET_COLUMNS = [
+export const QUOTE_COLUMNS = [
   'qid', 'type', 'quote', 'author', 'label', 'tag',
   'lang', 'book', 'page', 'year', 'entry_date', 'notes', 'translation',
 ];
+
+export const BOOK_COLUMNS = [
+  'title', 'author', 'year_published', 'year_read', 'genre', 'type', 'status', 'notes',
+];
+
+export const DEFAULT_SHEET_QUOTES = 'quotes';
+export const DEFAULT_SHEET_BOOKS = 'books';
 
 // Language options
 export const LANGUAGES = {

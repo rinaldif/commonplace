@@ -1,53 +1,7 @@
+import { DEFAULT_SHEET_QUOTES, DEFAULT_SHEET_BOOKS } from './config.js';
+
 class Store {
-  constructor(initialState = {}) {
-    this._state = { ...initialState };
-    this._listeners = {};
-    this._globalListeners = [];
-  }
-
-  get(key) {
-    return this._state[key];
-  }
-
-  set(key, value) {
-    const old = this._state[key];
-    this._state[key] = value;
-    if (old !== value) {
-      this._notify(key, value, old);
-    }
-  }
-
-  subscribe(keyOrStar, fn) {
-    if (keyOrStar === '*') {
-      this._globalListeners.push(fn);
-      return () => {
-        this._globalListeners = this._globalListeners.filter(f => f !== fn);
-      };
-    }
-    if (!this._listeners[keyOrStar]) this._listeners[keyOrStar] = [];
-    this._listeners[keyOrStar].push(fn);
-    return () => {
-      this._listeners[keyOrStar] = this._listeners[keyOrStar].filter(f => f !== fn);
-    };
-  }
-
-  batch(updates) {
-    const changes = [];
-    for (const [key, value] of Object.entries(updates)) {
-      const old = this._state[key];
-      this._state[key] = value;
-      if (old !== value) changes.push([key, value, old]);
-    }
-    for (const [key, value, old] of changes) {
-      this._notify(key, value, old);
-    }
-  }
-
-  _notify(key, value, old) {
-    const fns = this._listeners[key] || [];
-    for (const fn of fns) fn(value, old, key);
-    for (const fn of this._globalListeners) fn(key, value, old);
-  }
+// ... (rest of class)
 }
 
 export const store = new Store({
@@ -57,25 +11,21 @@ export const store = new Store({
 
   // Sheet config
   spreadsheetId: localStorage.getItem('cpb_spreadsheetId') || '',
-  sheetName: localStorage.getItem('cpb_sheetName') || 'Sheet1',
+  sheetName: localStorage.getItem('cpb_sheetName') || DEFAULT_SHEET_QUOTES,
+  booksSheetName: localStorage.getItem('cpb_booksSheetName') || DEFAULT_SHEET_BOOKS,
 
   // Data
   quotes: [],
   filteredQuotes: [],
+  books: [],
+  filteredBooks: [],
   isLoading: false,
   dataError: null,
   isStarterMode: false,
 
   // Filters
   filterLang: 'all',
-  filterType: 'all',
-  filterAuthors: [],
-  filterLabels: [],
-  filterTags: [],
-
-  // Quote display
-  quoteHistory: [],
-  quoteIndex: -1,
+// ... (rest of filters)
 
   // View
   currentView: 'browse',
@@ -84,3 +34,4 @@ export const store = new Store({
 // Persist to localStorage
 store.subscribe('spreadsheetId', v => localStorage.setItem('cpb_spreadsheetId', v));
 store.subscribe('sheetName', v => localStorage.setItem('cpb_sheetName', v));
+store.subscribe('booksSheetName', v => localStorage.setItem('cpb_booksSheetName', v));

@@ -2,13 +2,13 @@ import { store } from './store.js';
 import { readRows, readHeaders, appendRow, appendRows, listSpreadsheets, getSheetNames, createSpreadsheet } from './sheets.js';
 import { generateQid } from './utils/qid.js';
 import { todayISO, currentYear } from './utils/format.js';
-import { SHEET_COLUMNS } from './config.js';
+import { QUOTE_COLUMNS } from './config.js';
 import { STARTER_QUOTES } from './starter.js';
 
 export { listSpreadsheets, getSheetNames, createSpreadsheet };
 
 export async function createNewSheet() {
-  const result = await createSpreadsheet(SHEET_COLUMNS);
+  const result = await createSpreadsheet(QUOTE_COLUMNS);
   store.batch({
     spreadsheetId: result.spreadsheetId,
     sheetName: result.sheetName,
@@ -27,8 +27,8 @@ export async function loadQuotes() {
   try {
     const quotes = await readRows(spreadsheetId, sheetName);
     
-    if (quotes.length === 0) {
-      // Empty sheet! Enable starter mode with sample data
+    if (quotes.length === 0 && (sheetName === 'quotes' || sheetName === 'Sheet1')) {
+      // Enable starter mode only if it's a default/empty sheet
       store.batch({
         isStarterMode: true,
         quotes: STARTER_QUOTES,
@@ -41,7 +41,27 @@ export async function loadQuotes() {
     }
     applyFilters();
   } catch (err) {
-    store.set('dataError', err.message || 'Failed to load quotes');
+    console.error('loadQuotes error:', err);
+    store.set('dataError', err.message || 'Failed to load quotes. Ensure your sheet tab is named correctly.');
+  } finally {
+    store.set('isLoading', false);
+  }
+}
+
+export async function loadBooks() {
+  const spreadsheetId = store.get('spreadsheetId');
+  const booksSheetName = store.get('booksSheetName');
+  if (!spreadsheetId) return;
+
+  store.set('isLoading', true);
+  try {
+    const books = await readRows(spreadsheetId, booksSheetName);
+    store.batch({
+      books: books,
+      filteredBooks: books,
+    });
+  } catch (err) {
+    console.warn('Failed to load books:', err.message);
   } finally {
     store.set('isLoading', false);
   }
@@ -73,7 +93,7 @@ export async function importStarterQuotes() {
 }
 
 export function applyFilters() {
-  let quotes = store.get('quotes');
+  let quotes = store.get('quotes') || [];
   const lang = store.get('filterLang');
   const type = store.get('filterType');
   const authors = store.get('filterAuthors');
@@ -107,6 +127,20 @@ export async function addQuote(quoteData) {
 
   await loadQuotes();
   return qid;
+}
+
+export async function addBook(bookData) {
+  const spreadsheetId = store.get('spreadsheetId');
+  const booksSheetName = store.get('booksSheetName');
+
+  // Dynamically read headers from the "books" tab to ensure we match your structure
+  const headers = await readHeaders(spreadsheetId, booksSheetName);
+  if (!headers.length) {
+    throw new Error(`Sheet tab "${booksSheetName}" appears to be empty or has no headers.`);
+  }
+  
+  await appendRow(spreadsheetId, booksSheetName, headers, bookData);
+  await loadBooks();
 }
 
 export async function validateSheet(spreadsheetId) {

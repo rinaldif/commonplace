@@ -36,16 +36,19 @@ function render(container) {
 }
 
 function renderStatsAndList(container, books) {
-  if (books.length === 0) {
+  // Filter out the blank/separator rows (where count is 0 or empty)
+  const realBooks = books.filter(b => b.count && parseInt(b.count) > 0);
+
+  if (realBooks.length === 0) {
     container.appendChild(el('p', { class: 'empty-state' }, 'No books loaded yet. Go to "Add Book" to start!'));
     return;
   }
 
   // Stats section
-  const stats = calculateStats(books);
+  const stats = calculateStats(realBooks);
   const statsGrid = el('div', { class: 'stats-grid' },
     el('div', { class: 'stat-card' },
-      el('div', { class: 'stat-value' }, books.length),
+      el('div', { class: 'stat-value' }, realBooks.length),
       el('div', { class: 'stat-label' }, 'Total Books')
     ),
     el('div', { class: 'stat-card' },
@@ -71,10 +74,10 @@ function renderStatsAndList(container, books) {
   // List section
   const list = el('div', { class: 'books-list' },
     el('h3', {}, 'Recently Read'),
-    ...books.slice().reverse().map(book => el('div', { class: 'book-item' },
+    ...realBooks.slice().reverse().map(book => el('div', { class: 'book-item' },
       el('div', { class: 'book-info' },
-        el('div', { class: 'book-title' }, book.title),
-        el('div', { class: 'book-author' }, `by ${book.author}`),
+        el('div', { class: 'book-title' }, book.book_title),
+        el('div', { class: 'book-author' }, `by ${book.author_name}`),
       ),
       el('div', { class: 'book-meta' }, 
         el('span', { class: 'badge' }, book.genre),
@@ -96,8 +99,20 @@ function renderAddForm(container) {
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
       
+      // Map form fields to our sheet columns
+      const bookData = {
+        count: '1',
+        book_title: data.title,
+        author_name: data.author,
+        year_published: data.year_published,
+        year_read: data.year_read,
+        genre: data.genre,
+        Format: data.format,
+        Notes: data.notes
+      };
+
       try {
-        await window.__cpbData.addBook(data);
+        await window.__cpbData.addBook(bookData);
         activeTab = 'list';
         render(container); // Re-render in the current container
       } catch (err) {
@@ -128,11 +143,12 @@ function renderAddForm(container) {
       el('input', { type: 'text', name: 'genre', id: 'genre', placeholder: 'e.g. Fiction, History' })
     ),
     el('div', { class: 'form-group' },
-      el('label', { for: 'status' }, 'Status'),
-      el('select', { name: 'status', id: 'status' },
-        el('option', { value: 'Read' }, 'Read'),
-        el('option', { value: 'Reading' }, 'Reading'),
-        el('option', { value: 'To Read' }, 'To Read')
+      el('label', { for: 'format' }, 'Format'),
+      el('select', { name: 'format', id: 'format' },
+        el('option', { value: 'eBook' }, 'eBook'),
+        el('option', { value: 'Paperback' }, 'Paperback'),
+        el('option', { value: 'Audiobook' }, 'Audiobook'),
+        el('option', { value: 'Hardcover' }, 'Hardcover')
       )
     ),
     el('button', { type: 'submit', class: 'btn btn--primary' }, 'Save Book')

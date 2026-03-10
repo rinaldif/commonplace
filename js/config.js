@@ -29,7 +29,9 @@ export const QUOTE_COLUMNS = [
 ];
 
 export const BOOK_COLUMNS = [
-  'title', 'author', 'year_published', 'year_read', 'genre', 'type', 'status', 'notes',
+  'count', 'asin', 'isbn_1', 'isbn_13', 'type', 'genre', 'genre_detail', 
+  'book_title', 'book_subtitle', 'author_name', 'pages', 
+  'year_published', 'year_read', 'Language', 'Format', 'Notes',
 ];
 
 export const DEFAULT_SHEET_QUOTES = 'quotes';

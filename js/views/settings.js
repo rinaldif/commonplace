@@ -34,7 +34,7 @@ function render(container) {
   const createBtn = el('button', {
     class: 'btn btn--primary btn--full',
     style: 'margin-bottom: 1.5rem',
-    onClick: async () => {
+    onclick: async () => {
       createBtn.disabled = true;
       createBtn.textContent = 'Creating...';
       try {
@@ -66,21 +66,31 @@ function render(container) {
   const refreshBtn = el('button', {
     class: 'btn btn--ghost btn--sm',
     style: 'margin-top: 0.5rem',
-    onClick: () => fetchSheets(),
+    onclick: () => fetchSheets(),
   }, 'Refresh list');
 
   sheetGroup.append(sheetSelect, refreshBtn);
   sheetSection.appendChild(sheetGroup);
 
-  // Tab section
-  const tabGroup = el('div', { class: 'form-group' },
-    el('label', { class: 'form-label' }, 'Sheet Tab (e.g., Sheet1)'),
+  // Quotes Tab section
+  const quotesTabGroup = el('div', { class: 'form-group' },
+    el('label', { class: 'form-label' }, 'Quotes Tab (e.g., quotes)'),
   );
-  const tabSelect = el('select', { class: 'form-input' },
+  const quotesTabSelect = el('select', { class: 'form-input' },
     el('option', { value: '' }, 'Select a tab...'),
   );
-  tabGroup.appendChild(tabSelect);
-  sheetSection.appendChild(tabGroup);
+  quotesTabGroup.appendChild(quotesTabSelect);
+  sheetSection.appendChild(quotesTabGroup);
+
+  // Books Tab section
+  const booksTabGroup = el('div', { class: 'form-group' },
+    el('label', { class: 'form-label' }, 'Books Tab (e.g., books)'),
+  );
+  const booksTabSelect = el('select', { class: 'form-input' },
+    el('option', { value: '' }, 'Select a tab...'),
+  );
+  booksTabGroup.appendChild(booksTabSelect);
+  sheetSection.appendChild(booksTabGroup);
 
   // Current connection status
   const sheetStatus = el('div', { class: 'settings__status' });
@@ -108,8 +118,7 @@ function render(container) {
       clear(sheetSelect);
       sheetSelect.appendChild(el('option', { value: '' }, 'Select a spreadsheet...'));
       files.forEach(file => {
-        const opt = el('option', { value: file.id }, file.name);
-        if (file.id === store.get('spreadsheetId')) opt.selected = true;
+        const opt = el('option', { value: file.id, selected: file.id === store.get('spreadsheetId') }, file.name);
         sheetSelect.appendChild(opt);
       });
       
@@ -125,30 +134,35 @@ function render(container) {
 
   async function fetchTabs(spreadsheetId) {
     if (!spreadsheetId) return;
-    tabSelect.disabled = true;
-    clear(tabSelect);
-    tabSelect.appendChild(el('option', { value: '' }, 'Loading tabs...'));
+    quotesTabSelect.disabled = true;
+    booksTabSelect.disabled = true;
+    clear(quotesTabSelect);
+    clear(booksTabSelect);
+    quotesTabSelect.appendChild(el('option', { value: '' }, 'Loading...'));
+    booksTabSelect.appendChild(el('option', { value: '' }, 'Loading...'));
 
     try {
       const { getSheetNames } = window.__cpbData || {};
       if (!getSheetNames) return;
 
       const tabs = await getSheetNames(spreadsheetId);
-      clear(tabSelect);
+      clear(quotesTabSelect);
+      clear(booksTabSelect);
+      
+      quotesTabSelect.appendChild(el('option', { value: '' }, 'Select Quotes tab...'));
+      booksTabSelect.appendChild(el('option', { value: '' }, 'Select Books tab...'));
+
       tabs.forEach(tab => {
-        const opt = el('option', { value: tab }, tab);
-        if (tab === store.get('sheetName')) opt.selected = true;
-        tabSelect.appendChild(opt);
+        quotesTabSelect.appendChild(el('option', { value: tab, selected: tab === store.get('sheetName') }, tab));
+        booksTabSelect.appendChild(el('option', { value: tab, selected: tab === store.get('booksSheetName') }, tab));
       });
 
-      // If current sheetName isn't in the list, select the first one
-      if (!tabs.includes(store.get('sheetName')) && tabs.length > 0) {
-        store.set('sheetName', tabs[0]);
-      }
+      // If current names aren't in the list, don't auto-select to avoid confusion
     } catch (err) {
       showToast(`Failed to fetch tabs: ${err.message}`, 'error');
     } finally {
-      tabSelect.disabled = false;
+      quotesTabSelect.disabled = false;
+      booksTabSelect.disabled = false;
     }
   }
 
@@ -157,18 +171,24 @@ function render(container) {
     if (id) {
       store.set('spreadsheetId', id);
       fetchTabs(id);
-      // Load data for the new sheet
+    }
+  });
+
+  quotesTabSelect.addEventListener('change', () => {
+    const name = quotesTabSelect.value;
+    if (name) {
+      store.set('sheetName', name);
       const { loadQuotes } = window.__cpbData || {};
       if (loadQuotes) loadQuotes();
     }
   });
 
-  tabSelect.addEventListener('change', () => {
-    const name = tabSelect.value;
+  booksTabSelect.addEventListener('change', () => {
+    const name = booksTabSelect.value;
     if (name) {
-      store.set('sheetName', name);
-      const { loadQuotes } = window.__cpbData || {};
-      if (loadQuotes) loadQuotes();
+      store.set('booksSheetName', name);
+      const { loadBooks } = window.__cpbData || {};
+      if (loadBooks) loadBooks();
     }
   });
 

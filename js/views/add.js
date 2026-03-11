@@ -6,151 +6,194 @@ import { TYPE_LABELS } from '../config.js';
 import { ICONS } from '../icons.js';
 
 let unsubs = [];
+let activeMode = 'quote'; // 'quote' or 'book'
 
 function render(container) {
   unsubs = [];
-  const wrapper = el('div');
+  const wrapper = el('div', { class: 'add-view' });
 
   if (!store.get('isAuthenticated') || !store.get('spreadsheetId')) {
     wrapper.appendChild(el('div', { class: 'empty-state' },
       el('div', { class: 'empty-state__icon' }, '\uD83D\uDD12'),
-      el('p', {}, 'Sign in and connect a Google Sheet to add quotes.'),
+      el('p', {}, 'Sign in and connect a Google Sheet to add content.'),
     ));
     container.appendChild(wrapper);
     return;
   }
 
+  // Toggle mode
+  const modeToggle = el('div', { class: 'view-tabs', style: 'margin-bottom: var(--space-6)' },
+    el('button', { 
+      class: `btn btn--tab ${activeMode === 'quote' ? 'active' : ''}`,
+      onclick: () => { activeMode = 'quote'; render(container); }
+    }, 'Add Quote'),
+    el('button', { 
+      class: `btn btn--tab ${activeMode === 'book' ? 'active' : ''}`,
+      onclick: () => { activeMode = 'book'; render(container); }
+    }, 'Add Book')
+  );
+  wrapper.appendChild(modeToggle);
+
+  const formContainer = el('div', { class: 'add-form-container' });
+  if (activeMode === 'quote') {
+    renderQuoteForm(formContainer);
+  } else {
+    renderBookForm(formContainer);
+  }
+  wrapper.appendChild(formContainer);
+
+  clear(container);
+  container.appendChild(wrapper);
+}
+
+function renderQuoteForm(container) {
+  const formEl = el('div', { class: 'add-form' });
+
   // Type selector
-  const typeGroup = el('div', { class: 'form-group add-type-selector' },
+  const typeGroup = el('div', { class: 'form-group' },
     el('label', { class: 'form-label' }, 'Quote Type'),
   );
   const typeSelect = el('select', { class: 'form-select' },
     ...Object.entries(TYPE_LABELS).map(([k, v]) => el('option', { value: k }, v))
   );
   typeGroup.appendChild(typeSelect);
-  wrapper.appendChild(typeGroup);
+  formEl.appendChild(typeGroup);
 
-  // Form container
-  const formEl = el('div', { class: 'add-form', id: 'add-form' });
-  wrapper.appendChild(formEl);
+  // Quote text
+  const quoteInput = el('textarea', {
+    class: 'form-textarea',
+    placeholder: 'Enter the quote text...',
+  });
+  formEl.appendChild(el('div', { class: 'form-group' },
+    el('label', { class: 'form-label' }, 'Quote *'),
+    quoteInput,
+  ));
 
-  function renderForm() {
-    clear(formEl);
-    const selectedType = typeSelect.value;
+  // Author
+  const authorInput = el('input', {
+    class: 'form-input',
+    type: 'text',
+    placeholder: 'Who said or wrote this?',
+  });
+  formEl.appendChild(el('div', { class: 'form-group' },
+    el('label', { class: 'form-label' }, 'Author *'),
+    authorInput,
+  ));
 
-    // Quote text
-    const quoteInput = el('textarea', {
-      class: 'form-textarea',
-      placeholder: 'Enter the quote text...',
-      id: 'add-quote-text',
-    });
-    formEl.appendChild(el('div', { class: 'form-group' },
-      el('label', { class: 'form-label' }, 'Quote *'),
-      quoteInput,
-    ));
+  const row3 = el('div', { class: 'add-form__row add-form__row--3col' });
+  const labelCombo = createComboSelect('Label', 'label');
+  const tagCombo = createComboSelect('Tag', 'tag');
+  const langCombo = createComboSelect('Language', 'lang');
+  row3.append(labelCombo.el, tagCombo.el, langCombo.el);
+  formEl.appendChild(row3);
 
-    // Author
-    const authorInput = el('input', {
-      class: 'form-input',
-      type: 'text',
-      placeholder: 'Who said or wrote this?',
-      id: 'add-author',
-    });
-    formEl.appendChild(el('div', { class: 'form-group' },
-      el('label', { class: 'form-label' }, 'Author *'),
-      authorInput,
-    ));
+  const bookInput = el('input', { class: 'form-input', type: 'text', placeholder: 'Book title' });
+  const pageInput = el('input', { class: 'form-input', type: 'text', placeholder: 'Page' });
+  const row2 = el('div', { class: 'add-form__row add-form__row--2col' });
+  row2.append(
+    el('div', { class: 'form-group' }, el('label', { class: 'form-label' }, 'Book'), bookInput),
+    el('div', { class: 'form-group' }, el('label', { class: 'form-label' }, 'Page'), pageInput)
+  );
+  formEl.appendChild(row2);
 
-    // Label, Tag, Language (3-column row)
-    const row3 = el('div', { class: 'add-form__row add-form__row--3col' });
+  const notesInput = el('textarea', { class: 'form-textarea', placeholder: 'Notes...' });
+  formEl.appendChild(el('div', { class: 'form-group' }, el('label', { class: 'form-label' }, 'Notes'), notesInput));
 
-    const labelCombo = createComboSelect('Label', 'label');
-    row3.appendChild(labelCombo.el);
+  const submitBtn = el('button', {
+    class: 'btn btn--primary btn--block',
+    onclick: async () => {
+      const data = {
+        type: typeSelect.value,
+        quote: quoteInput.value.trim(),
+        author: authorInput.value.trim(),
+        label: labelCombo.getValue(),
+        tag: tagCombo.getValue(),
+        lang: langCombo.getValue(),
+        book: bookInput.value.trim(),
+        page: pageInput.value.trim(),
+        notes: notesInput.value.trim(),
+      };
 
-    const tagCombo = createComboSelect('Tag', 'tag');
-    row3.appendChild(tagCombo.el);
+      if (!data.quote || !data.author) return showToast('Quote and Author are required', 'error');
 
-    const langCombo = createComboSelect('Language', 'lang');
-    row3.appendChild(langCombo.el);
-
-    formEl.appendChild(row3);
-
-    // Book & Page (only for index_cards)
-    let bookInput, pageInput;
-    if (selectedType === 'index_cards') {
-      const row2 = el('div', { class: 'add-form__row add-form__row--2col' });
-      bookInput = el('input', { class: 'form-input', type: 'text', placeholder: 'Book title' });
-      pageInput = el('input', { class: 'form-input', type: 'text', placeholder: 'Page number' });
-      row2.appendChild(el('div', { class: 'form-group' },
-        el('label', { class: 'form-label' }, 'Book'),
-        bookInput,
-      ));
-      row2.appendChild(el('div', { class: 'form-group' },
-        el('label', { class: 'form-label' }, 'Page'),
-        pageInput,
-      ));
-      formEl.appendChild(row2);
+      submitBtn.disabled = true;
+      try {
+        await window.__cpbData.addQuote(data);
+        showToast('Quote added!', 'success');
+        renderQuoteForm(container);
+      } catch (err) {
+        showToast(err.message, 'error');
+        submitBtn.disabled = false;
+      }
     }
+  }, 'Add Quote');
+  formEl.appendChild(submitBtn);
 
-    // Notes
-    const notesInput = el('textarea', {
-      class: 'form-textarea',
-      placeholder: 'Additional notes (optional)',
-      style: { minHeight: '60px' },
-    });
-    formEl.appendChild(el('div', { class: 'form-group' },
-      el('label', { class: 'form-label' }, 'Notes'),
-      notesInput,
-    ));
+  clear(container);
+  container.appendChild(formEl);
+}
 
-    // Submit
-    const submitBtn = el('button', {
-      class: 'btn btn--primary btn--block',
-      onClick: async () => {
-        const quoteText = quoteInput.value.trim();
-        const author = authorInput.value.trim();
+function renderBookForm(container) {
+  const formEl = el('div', { class: 'add-form' });
 
-        if (!quoteText || !author) {
-          showToast('Quote and Author are required', 'error');
-          return;
-        }
+  const titleInput = el('input', { class: 'form-input', type: 'text', required: true });
+  const authorInput = el('input', { class: 'form-input', type: 'text', required: true });
+  
+  formEl.append(
+    el('div', { class: 'form-group' }, el('label', { class: 'form-label' }, 'Book Title *'), titleInput),
+    el('div', { class: 'form-group' }, el('label', { class: 'form-label' }, 'Author *'), authorInput)
+  );
 
-        const data = {
-          type: selectedType,
-          quote: quoteText,
-          author: author,
-          label: labelCombo.getValue(),
-          tag: tagCombo.getValue(),
-          lang: langCombo.getValue(),
-          book: bookInput?.value.trim() || '',
-          page: pageInput?.value.trim() || '',
-          notes: notesInput.value.trim(),
-          translation: '',
-        };
+  const yearPubInput = el('input', { class: 'form-input', type: 'number' });
+  const yearReadInput = el('input', { class: 'form-input', type: 'number', value: new Date().getFullYear() });
+  const row2 = el('div', { class: 'add-form__row add-form__row--2col' });
+  row2.append(
+    el('div', { class: 'form-group' }, el('label', { class: 'form-label' }, 'Year Published'), yearPubInput),
+    el('div', { class: 'form-group' }, el('label', { class: 'form-label' }, 'Year Read'), yearReadInput)
+  );
+  formEl.appendChild(row2);
 
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Adding...';
+  const genreInput = el('input', { class: 'form-input', type: 'text' });
+  formEl.appendChild(el('div', { class: 'form-group' }, el('label', { class: 'form-label' }, 'Genre'), genreInput));
 
-        try {
-          const { addQuote } = window.__cpbData || {};
-          if (!addQuote) throw new Error('Data layer not initialized');
-          const qid = await addQuote(data);
-          showToast(`Quote added! (${qid})`, 'success');
-          renderForm(); // Reset form
-        } catch (err) {
-          showToast(`Failed to add quote: ${err.message}`, 'error');
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Add Quote';
-        }
-      },
-    }, 'Add Quote');
+  const formatSelect = el('select', { class: 'form-select' },
+    el('option', { value: 'eBook' }, 'eBook'),
+    el('option', { value: 'Paperback' }, 'Paperback'),
+    el('option', { value: 'Audiobook' }, 'Audiobook'),
+    el('option', { value: 'Hardcover' }, 'Hardcover')
+  );
+  formEl.appendChild(el('div', { class: 'form-group' }, el('label', { class: 'form-label' }, 'Format'), formatSelect));
 
-    formEl.appendChild(el('div', { class: 'add-form__actions' }, submitBtn));
-  }
+  const submitBtn = el('button', {
+    class: 'btn btn--primary btn--block',
+    onclick: async () => {
+      const data = {
+        count: '1',
+        book_title: titleInput.value.trim(),
+        author_name: authorInput.value.trim(),
+        year_published: yearPubInput.value,
+        year_read: yearReadInput.value,
+        genre: genreInput.value.trim(),
+        Format: formatSelect.value
+      };
 
-  typeSelect.addEventListener('change', renderForm);
-  renderForm();
-  container.appendChild(wrapper);
+      if (!data.book_title || !data.author_name) return showToast('Title and Author are required', 'error');
+
+      submitBtn.disabled = true;
+      try {
+        await window.__cpbData.addBook(data);
+        showToast('Book added!', 'success');
+        renderBookForm(container);
+      } catch (err) {
+        showToast(err.message, 'error');
+        submitBtn.disabled = false;
+      }
+    }
+  }, 'Add Book');
+  formEl.appendChild(submitBtn);
+
+  clear(container);
+  container.appendChild(formEl);
 }
 
 function createComboSelect(label, column) {
@@ -158,45 +201,30 @@ function createComboSelect(label, column) {
   group.appendChild(el('label', { class: 'form-label' }, label));
 
   const select = el('select', { class: 'form-select' });
-  const quotes = store.get('quotes');
-  const values = getUniqueValues(quotes, column);
+  const quotes = store.get('quotes') || [];
+  const values = [...new Set(quotes.map(q => (q[column] || '').trim()).filter(Boolean))].sort();
 
   select.appendChild(el('option', { value: '' }, '-- Select --'));
   select.appendChild(el('option', { value: '__new__' }, '+ Add new...'));
-  values.forEach(v => {
-    select.appendChild(el('option', { value: v }, v));
-  });
+  values.forEach(v => select.appendChild(el('option', { value: v }, v)));
   
-  group.appendChild(select);
-
   const newInput = el('input', {
-    class: 'form-input combo-select__new-input',
+    class: 'form-input',
     type: 'text',
     placeholder: `New ${label.toLowerCase()}...`,
     hidden: true,
+    style: 'margin-top: 4px'
   });
-  group.appendChild(newInput);
 
-  select.addEventListener('change', () => {
-    newInput.hidden = select.value !== '__new__';
-  });
+  select.addEventListener('change', () => { newInput.hidden = select.value !== '__new__'; });
+  group.append(select, newInput);
 
   return {
     el: group,
     getValue() {
-      if (select.value === '__new__') return newInput.value.trim();
-      return select.value;
-    },
+      return select.value === '__new__' ? newInput.value.trim() : select.value;
+    }
   };
-}
-
-function getUniqueValues(data, column) {
-  const values = new Set();
-  for (const row of data) {
-    const v = (row[column] || '').trim();
-    if (v) values.add(v);
-  }
-  return [...values].sort();
 }
 
 function destroy() {

@@ -27,9 +27,6 @@ function render(container) {
   // Sheet section
   const sheetSection = el('div', { class: 'settings__section' });
   sheetSection.appendChild(el('h2', { class: 'settings__section-title' }, 'Google Sheet'));
-  sheetSection.appendChild(el('p', { class: 'settings__description' },
-    'Select a spreadsheet from your Google Drive or create a new one.',
-  ));
 
   const createBtn = el('button', {
     class: 'btn btn--primary btn--full',
@@ -71,9 +68,9 @@ function render(container) {
   sheetGroup.append(sheetSelect, refreshBtn);
   sheetSection.appendChild(sheetGroup);
 
-  // Quotes Tab section
+  // Tab sections
   const quotesTabGroup = el('div', { class: 'form-group' },
-    el('label', { class: 'form-label' }, 'Quotes Tab (e.g., quotes)'),
+    el('label', { class: 'form-label' }, 'Quotes Tab'),
   );
   const quotesTabSelect = el('select', { class: 'form-input' },
     el('option', { value: '' }, 'Select a tab...'),
@@ -81,9 +78,8 @@ function render(container) {
   quotesTabGroup.appendChild(quotesTabSelect);
   sheetSection.appendChild(quotesTabGroup);
 
-  // Books Tab section
   const booksTabGroup = el('div', { class: 'form-group' },
-    el('label', { class: 'form-label' }, 'Books Tab (e.g., books)'),
+    el('label', { class: 'form-label' }, 'Books Tab'),
   );
   const booksTabSelect = el('select', { class: 'form-input' },
     el('option', { value: '' }, 'Select a tab...'),
@@ -91,7 +87,6 @@ function render(container) {
   booksTabGroup.appendChild(booksTabSelect);
   sheetSection.appendChild(booksTabGroup);
 
-  // Current connection status
   const sheetStatus = el('div', { class: 'settings__status' });
   const sheetDot = el('span', { class: 'settings__status-dot' });
   const sheetText = el('span');
@@ -152,21 +147,22 @@ function render(container) {
       booksTabSelect.appendChild(el('option', { value: '' }, 'Select Books tab...'));
 
       tabs.forEach(tab => {
-        // Auto-select "quotes" or "books" if they exist and nothing is selected
         const isQuotesTab = tab.toLowerCase() === 'quotes';
         const isBooksTab = tab.toLowerCase() === 'books';
         
-        const quotesSelected = tab === store.get('sheetName') || (!store.get('sheetName') && isQuotesTab);
-        const booksSelected = tab === store.get('booksSheetName') || (!store.get('booksSheetName') && isBooksTab);
+        const qActive = store.get('sheetName');
+        const bActive = store.get('booksSheetName');
+
+        const quotesSelected = tab === qActive || (!qActive && isQuotesTab);
+        const booksSelected = tab === bActive || (!bActive && isBooksTab);
 
         quotesTabSelect.appendChild(el('option', { value: tab, selected: quotesSelected }, tab));
         booksTabSelect.appendChild(el('option', { value: tab, selected: booksSelected }, tab));
         
-        if (quotesSelected && !store.get('sheetName')) store.set('sheetName', tab);
-        if (booksSelected && !store.get('booksSheetName')) store.set('booksSheetName', tab);
+        if (quotesSelected && !qActive) store.set('sheetName', tab);
+        if (booksSelected && !bActive) store.set('booksSheetName', tab);
       });
 
-      // Load data for the newly selected tabs if they were auto-selected
       const { loadQuotes, loadBooks } = window.__cpbData || {};
       if (loadQuotes) loadQuotes();
       if (loadBooks) loadBooks();

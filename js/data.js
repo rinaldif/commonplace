@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { readRows, readHeaders, appendRow, appendRows, listSpreadsheets, getSheetNames, createSpreadsheet } from './sheets.js';
+import { readRows, readHeaders, appendRow, appendRows, insertRowAtTop, listSpreadsheets, getSheetNames, createSpreadsheet } from './sheets.js';
 import { generateQid } from './utils/qid.js';
 import { todayISO, currentYear } from './utils/format.js';
 import { QUOTE_COLUMNS } from './config.js';
@@ -28,7 +28,6 @@ export async function loadQuotes() {
     const quotes = await readRows(spreadsheetId, sheetName);
     
     if (quotes.length === 0 && (sheetName === 'quotes' || sheetName === 'Sheet1')) {
-      // Enable starter mode only if it's a default/empty sheet
       store.batch({
         isStarterMode: true,
         quotes: STARTER_QUOTES,
@@ -133,13 +132,12 @@ export async function addBook(bookData) {
   const spreadsheetId = store.get('spreadsheetId');
   const booksSheetName = store.get('booksSheetName');
 
-  // Dynamically read headers from the "books" tab to ensure we match your structure
   const headers = await readHeaders(spreadsheetId, booksSheetName);
   if (!headers.length) {
     throw new Error(`Sheet tab "${booksSheetName}" appears to be empty or has no headers.`);
   }
   
-  await appendRow(spreadsheetId, booksSheetName, headers, bookData);
+  await insertRowAtTop(spreadsheetId, booksSheetName, headers, bookData);
   await loadBooks();
 }
 

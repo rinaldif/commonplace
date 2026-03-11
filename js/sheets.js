@@ -9,7 +9,6 @@ export async function createSpreadsheet(headers) {
     throw new Error('Google Sheets API failed to load.');
   }
   return withAuth(async () => {
-    // 1. Create the spreadsheet
     const response = await gapi.client.sheets.spreadsheets.create({
       resource: {
         properties: { title: 'My Commonplace Book' },
@@ -18,7 +17,6 @@ export async function createSpreadsheet(headers) {
     const spreadsheetId = response.result.spreadsheetId;
     const sheetName = response.result.sheets[0].properties.title;
 
-    // 2. Add headers to the first row
     await gapi.client.sheets.spreadsheets.values.update({
       spreadsheetId,
       range: `${sheetName}!1:1`,
@@ -38,7 +36,7 @@ export async function createSpreadsheet(headers) {
 export async function listSpreadsheets() {
   await gapiReady;
   if (!gapi.client?.drive) {
-    throw new Error('Google Drive API (metadata) failed to load. Ensure you have enabled it in Google Cloud Console.');
+    throw new Error('Google Drive API (metadata) failed to load.');
   }
   return withAuth(async () => {
     const response = await gapi.client.drive.files.list({
@@ -56,9 +54,6 @@ export async function listSpreadsheets() {
  */
 export async function getSheetNames(spreadsheetId) {
   await gapiReady;
-  if (!gapi.client?.sheets) {
-    throw new Error('Google Sheets API failed to load. Ensure you have enabled it in Google Cloud Console.');
-  }
   return withAuth(async () => {
     const response = await gapi.client.sheets.spreadsheets.get({
       spreadsheetId,
@@ -68,13 +63,10 @@ export async function getSheetNames(spreadsheetId) {
 }
 
 /**
- * Read all rows from a sheet tab, returning an array of objects.
+ * Read all rows from a sheet tab.
  */
 export async function readRows(spreadsheetId, sheetName) {
   await gapiReady;
-  if (!gapi.client?.sheets) {
-    throw new Error('Google Sheets API failed to load. Please check your internet connection and try again.');
-  }
   return withAuth(async () => {
     const response = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
@@ -97,9 +89,6 @@ export async function readRows(spreadsheetId, sheetName) {
  */
 export async function readHeaders(spreadsheetId, sheetName) {
   await gapiReady;
-  if (!gapi.client?.sheets) {
-    throw new Error('Google Sheets API failed to load. Please check your internet connection and try again.');
-  }
   return withAuth(async () => {
     const response = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
@@ -110,13 +99,10 @@ export async function readHeaders(spreadsheetId, sheetName) {
 }
 
 /**
- * Append a single row to the sheet.
+ * Append a single row to the end.
  */
 export async function appendRow(spreadsheetId, sheetName, headers, data) {
   await gapiReady;
-  if (!gapi.client?.sheets) {
-    throw new Error('Google Sheets API failed to load.');
-  }
   return withAuth(async () => {
     const rowValues = headers.map(h => data[h] ?? '');
     await gapi.client.sheets.spreadsheets.values.append({
@@ -130,13 +116,49 @@ export async function appendRow(spreadsheetId, sheetName, headers, data) {
 }
 
 /**
- * Append multiple rows to the sheet in one call.
+ * Insert a row at the top (Row 2, just below headers).
  */
+export async function insertRowAtTop(spreadsheetId, sheetName, headers, data) {
+  await gapiReady;
+  return withAuth(async () => {
+    // 1. Get sheet ID for the tab
+    const ss = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
+    const sheet = ss.result.sheets.find(s => s.properties.title === sheetName);
+    const sheetId = sheet.properties.sheetId;
+
+    // 2. Insert blank row at index 1 (Row 2)
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      resource: {
+        requests: [{
+          insertDimension: {
+            range: {
+              sheetId,
+              dimension: 'ROWS',
+              startIndex: 1,
+              endIndex: 2
+            },
+            inheritFromBefore: false
+          }
+        }]
+      }
+    });
+
+    // 3. Update the newly created Row 2 with data
+    const rowValues = headers.map(h => data[h] ?? '');
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${sheetName}!A2`,
+      valueInputOption: 'USER_ENTERED',
+      resource: {
+        values: [rowValues]
+      }
+    });
+  });
+}
+
 export async function appendRows(spreadsheetId, sheetName, headers, rowsData) {
   await gapiReady;
-  if (!gapi.client?.sheets) {
-    throw new Error('Google Sheets API failed to load.');
-  }
   return withAuth(async () => {
     const values = rowsData.map(data => headers.map(h => data[h] ?? ''));
     await gapi.client.sheets.spreadsheets.values.append({
@@ -149,10 +171,6 @@ export async function appendRows(spreadsheetId, sheetName, headers, rowsData) {
   });
 }
 
-
-/**
- * Extract spreadsheet ID from a Google Sheets URL.
- */
 export function extractSpreadsheetId(urlOrId) {
   const match = urlOrId.match(/\/d\/([a-zA-Z0-9_-]+)/);
   return match ? match[1] : urlOrId;
